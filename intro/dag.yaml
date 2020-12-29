@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: all-
+  labels:
+    workflows.argoproj.io/archive-strategy: "false"
+spec:
+  entrypoint: hello
+  templates:
+  - name: hello
+    dag:
+      tasks:
+      - name: step1
+        template: whalesay
+        arguments:
+          parameters:
+          - name: message
+            value: DevOps Catalog
+      - name: step2a
+        template: gen-random-int
+        dependencies: [step1]
+      - name: step2b
+        template: whalesay
+        arguments:
+          parameters:
+          - name: message
+            value: DevOps Catalog
+        dependencies: [step1]
+      - name: step3
+        template: delay
+        dependencies: [step2a, step2b]
+      - name: step4
+        template: whalesay
+        arguments:
+          parameters:
+          - name: message
+            value: DevOps Catalog
+        dependencies: [step3]
+  - name: whalesay
+    inputs:
+      parameters:
+      - name: message
+    container:
+      image: docker/whalesay:latest
+      command: [cowsay]
+      args: ["{{inputs.parameters.message}}"]
+  - name: gen-random-int
+    script:
+      image: python:alpine3.6
+      command: [python]
+      source: |
+        import random
+        i = random.randint(1, 100)
+        print(i)
+  # TODO: Fix it!
+  # - name: k8s-ns
+  #   resource:
+  #     action: create
+  #     manifest: |
+  #       apiVersion: v1
+  #       kind: ConfigMap
+  #       metadata:
+  #         generateName: owned-eg-
+  #       data:
+  #         some: value
+  - name: delay
+    suspend:
+      duration: "10s"
