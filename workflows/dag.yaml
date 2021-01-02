@@ -7,12 +7,19 @@ metadata:
 spec:
   entrypoint: full
   serviceAccountName: workflow
+  volumes:
+  - name: kaniko-secret
+    secret:
+      secretName: regcred
+      items:
+        - key: .dockerconfigjson
+          path: config.json
   templates:
   - name: full
     dag:
       tasks:
       - name: clone
-        template: git-clone
+        template: build-container-image
     # main_clone:
     #   title: Cloning repository
     #   type: git-clone
@@ -48,20 +55,36 @@ spec:
   #         - name: message
   #           value: DevOps Catalog
   #       dependencies: [step3]
-  - name: git-clone
-    inputs:
-      artifacts:
-      - name: code
-        path: /workspace
-        git:
-          repo: https://github.com/vfarcic/argo-workflows-demo.git
+  # TODO: Change args to params
+  - name: build-container-image
     container:
-      image: alpine:latest
-      command: [ls]
-      args: ["-l", "/workspace/app"]
-    # container:
-    #   image: klakegg/hugo:0.75.1-ext-alpine
-    #   command: [/workspace/app/build.sh]
+      image: gcr.io/kaniko-project/executor:debug
+      # workingDir: /src/app
+      # command: [hugo]
+      args:
+      - --context=git://github.com/vfarcic/kaniko-demo
+      - --destination=vfarcic/devops-toolkit:1.0.0
+      volumeMounts:
+        - name: kaniko-secret
+          mountPath: /kaniko/.docker/
+  # - name: build-hugo
+  #   inputs:
+  #     artifacts:
+  #     - name: source
+  #       path: /src
+  #       git:
+  #         repo: https://github.com/vfarcic/argo-workflows-demo.git
+  #   outputs:
+  #     artifacts:
+  #     - name: source
+  #       path: /src
+  #   container:
+  #     image: klakegg/hugo:0.75.1-ext-alpine
+  #     workingDir: /src/app
+  #     command: [hugo]
+      # volumeMounts:
+      # - name: workdir
+      #   mountPath: /src/public
 
   # - name: gen-random-int
   #   script:
