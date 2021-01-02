@@ -59,6 +59,10 @@ spec:
       image: alpine:latest
       command: [ls]
       args: ["-l", "/workspace/app"]
+    # container:
+    #   image: klakegg/hugo:0.75.1-ext-alpine
+    #   command: [/workspace/app/build.sh]
+
   # - name: gen-random-int
   #   script:
   #     image: python:alpine3.6
