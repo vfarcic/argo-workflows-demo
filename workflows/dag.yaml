@@ -1,0 +1,83 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: toolkit-
+  labels:
+    workflows.argoproj.io/archive-strategy: "false"
+spec:
+  entrypoint: full
+  serviceAccountName: workflow
+  templates:
+  - name: full
+    dag:
+      tasks:
+      - name: clone
+        template: git-clone
+    # main_clone:
+    #   title: Cloning repository
+    #   type: git-clone
+    #   arguments:
+    #     repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
+    #     git: github
+    #     revision: "${{CF_BRANCH}}"
+    #   stage: release
+    
+      # - name: step1
+      #   template: whalesay
+      #   arguments:
+      #     parameters:
+      #     - name: message
+      #       value: DevOps Catalog
+  #     - name: step2a
+  #       template: gen-random-int
+  #       dependencies: [step1]
+  #     - name: step2b
+  #       template: whalesay
+  #       arguments:
+  #         parameters:
+  #         - name: message
+  #           value: DevOps Catalog
+  #       dependencies: [step1]
+  #     - name: step3
+  #       template: delay
+  #       dependencies: [step2a, step2b]
+  #     - name: step4
+  #       template: whalesay
+  #       arguments:
+  #         parameters:
+  #         - name: message
+  #           value: DevOps Catalog
+  #       dependencies: [step3]
+  - name: git-clone
+    inputs:
+      artifacts:
+      - name: code
+        path: /src
+        git:
+          repo: https://github.com/vfarcic/argo-workflows-demo.git
+    container:
+      image: alpine:latest
+      command: [ls]
+      args: ["-l", "/src"]
+  # - name: gen-random-int
+  #   script:
+  #     image: python:alpine3.6
+  #     command: [python]
+  #     source: |
+  #       import random
+  #       i = random.randint(1, 100)
+  #       print(i)
+  # TODO: Fix it!
+  # - name: k8s-ns
+  #   resource:
+  #     action: create
+  #     manifest: |
+  #       apiVersion: v1
+  #       kind: ConfigMap
+  #       metadata:
+  #         generateName: owned-eg-
+  #       data:
+  #         some: value
+  # - name: delay
+  #   suspend:
+  #     duration: "10s"
