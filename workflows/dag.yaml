@@ -62,7 +62,7 @@ spec:
       # workingDir: /src/app
       # command: [hugo]
       args:
-      - --context=git://github.com/vfarcic/argo-workflows-demo
+      - --context=git://github.com/vfarcic/argo-workflows-demo-app
       - --destination=vfarcic/devops-toolkit:1.0.0
       volumeMounts:
         - name: kaniko-secret
