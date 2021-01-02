@@ -52,13 +52,13 @@ spec:
     inputs:
       artifacts:
       - name: code
-        path: /src
+        path: /workspace
         git:
           repo: https://github.com/vfarcic/argo-workflows-demo.git
     container:
       image: alpine:latest
       command: [ls]
-      args: ["-l", "/src"]
+      args: ["-l", "/workspace/app"]
   # - name: gen-random-int
   #   script:
   #     image: python:alpine3.6

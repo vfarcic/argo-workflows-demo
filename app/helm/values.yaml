@@ -1,0 +1,33 @@
+image:
+  repository: vfarcic/devops-toolkit-series
+  tag: latest
+  pullPolicy: IfNotPresent
+ingress:
+  enabled: true
+  host: devopstoolkitseries.com
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+  requests:
+    cpu: 80m
+    memory: 128Mi
+readinessProbe:
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+hpa: false
+knativeDeploy: false
+istio:
+  enabled: false
+rollout:
+  enabled: false
+  steps:
+  - setWeight: 10
+  - pause: {duration: 2m}
+  - setWeight: 30
+  - pause: {duration: 30s}
+  - setWeight: 50
+  - pause: {duration: 30s}
+  analysis:
+    enabled: true

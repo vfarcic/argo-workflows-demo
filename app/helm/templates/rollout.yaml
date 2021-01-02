@@ -1,0 +1,137 @@
+{{- if .Values.rollout.enabled }}
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app: {{ template "fullname" . }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+        istio-injection: enabled
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
+  strategy:
+    canary:
+      canaryService: {{ template "fullname" . }}-canary
+      stableService: {{ template "fullname" . }}
+      trafficRouting:
+        istio:
+          virtualService:
+            name: {{ template "fullname" . }}
+            routes:
+            - primary
+      steps:
+{{ toYaml .Values.rollout.steps | indent 6 }}
+{{- if .Values.rollout.analysis.enabled }}
+      analysis:
+        templates:
+        - templateName: {{ template "fullname" . }}
+        startingStep: 2
+        args:
+        - name: service-name
+          value: "{{ template "fullname" . }}-canary.{{ .Release.Namespace }}.svc.cluster.local"
+{{- end }}
+
+{{- if .Values.rollout.analysis.enabled }}
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ template "fullname" . }}
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    interval: 10s
+    successCondition: result[0] >= 0.8
+    failureCondition: result[0] < 0.8
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring
+        query: |
+          sum(irate(
+            istio_requests_total{  
+              reporter="source",
+              destination_service=~"{{ "{{args.service-name}}" }}",
+              response_code=~"2.*"
+            }[2m]
+          )) / sum(irate(
+            istio_requests_total{
+              reporter="source",
+              destination_service=~"{{ "{{args.service-name}}" }}"
+            }[2m]
+          ))
+  - name: avg-req-duration
+    interval: 10s
+    successCondition: result[0] <= 1000
+    failureCondition: result[0] > 1000
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring
+        query: |
+          sum(irate(
+            istio_request_duration_milliseconds_sum{
+              reporter="source",
+              destination_service=~"{{ "{{args.service-name}}" }}"
+            }[2m]
+          )) / sum(irate(
+            istio_request_duration_milliseconds_count{
+              reporter="source",
+              destination_service=~"{{ "{{args.service-name}}" }}"
+            }[2m]
+          ))
+{{- end }}
+      
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "fullname" . }}-canary
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ template "fullname" . }}
+{{- end }}
