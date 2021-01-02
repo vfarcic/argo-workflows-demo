@@ -6,6 +6,7 @@ metadata:
     workflows.argoproj.io/archive-strategy: "false"
 spec:
   entrypoint: hello
+  serviceAccountName: workflow
   templates:
   - name: hello
     steps:
