@@ -1,7 +1,0 @@
-[
-  {
-    "op": "replace",
-    "path": "/spec/rules/0/host",
-    "value": "argo-workflows.192.168.64.127.nip.io"
-  }
-]
