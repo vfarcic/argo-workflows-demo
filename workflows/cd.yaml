@@ -18,12 +18,12 @@ spec:
   - name: full
     dag:
       tasks:
-      - name: clone
+      - name: build-container-image
         template: build-container-image
         arguments:
           parameters:
           - name: app_repo
-            value: git://github.com/vfarcic/argo-workflows-demo-app
+            value: git://github.com/vfarcic/argo-workflows-demo
           - name: container_image
             value: vfarcic/devops-toolkit
           - name: container_tag
