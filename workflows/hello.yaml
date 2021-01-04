@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: hello-
+  labels:
+    workflows.argoproj.io/archive-strategy: "false"
+spec:
+  entrypoint: messages
+  serviceAccountName: workflow
+  templates:
+  - name: messages
+    dag:
+      tasks:
+      - name: frodo
+        templateRef:
+          name: message
+          template: generic
+        arguments:
+          parameters:
+          - name: text
+            value: Hello Frodo
+      - name: gandalf
+        templateRef:
+          name: message
+          template: generic
+        arguments:
+          parameters:
+          - name: text
+            value: Hello Gandalf

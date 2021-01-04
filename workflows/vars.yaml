@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: dag-
+  generateName: vars-
   labels:
     workflows.argoproj.io/archive-strategy: "false"
 spec:
@@ -23,50 +23,35 @@ spec:
         arguments:
           parameters:
           - name: message
-            value: This is task-a
+            value: This is task-a, iteration {{item}}
+        withItems:
+        - "1"
+        - "2"
+        - "3"
       - name: task-b
         template: my-task
         arguments:
           parameters:
           - name: message
             value: This is task-b
+        dependencies:
+        - task-a
       - name: task-c
         template: my-task
         arguments:
           parameters:
           - name: message
-            value: This is task-c
+            value: "This is task-c reporting the status of task-a: {{tasks.task-b.status}}"
+        dependencies:
+        - task-b
       - name: task-d
         template: my-task
         arguments:
           parameters:
           - name: message
-            value: This is task-d
+            value: "This is task-c reporting the status of task-a: {{tasks.task-b.status}}"
         dependencies:
-        - task-a
-      - name: task-e
-        template: my-task
-        arguments:
-          parameters:
-          - name: message
-            value: This is task-e
-        dependencies:
-        - task-a
-      - name: task-f
-        template: my-task
-        arguments:
-          parameters:
-          - name: message
-            value: This is task-f
-        dependencies:
-        - task-a
-        - task-e
-      - name: task-g
-        template: my-task
-        arguments:
-          parameters:
-          - name: message
-            value: This is task-g
+        - task-b
   - name: my-task
     inputs:
       parameters:

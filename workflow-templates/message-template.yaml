@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: message
+spec:
+  templates:
+  - name: generic
+    inputs:
+      parameters:
+      - name: text
+    container:
+      image: alpine
+      command: [echo]
+      args:
+      - "{{inputs.parameters.text}}"
