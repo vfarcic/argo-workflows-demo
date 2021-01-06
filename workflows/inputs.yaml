@@ -18,41 +18,33 @@ spec:
   - name: full
     dag:
       tasks:
-      - name: task-a
-        template: my-task
+      - name: simple
+        template: message
         arguments:
           parameters:
           - name: message
-            value: This is task-a, iteration {{item}}
+            value: This is a simple message
+      - name: loop
+        template: message
+        arguments:
+          parameters:
+          - name: message
+            value: This is the loop, iteration {{item}}
         withItems:
         - "1"
         - "2"
         - "3"
-      - name: task-b
-        template: my-task
+      - name: status
+        template: message
         arguments:
           parameters:
           - name: message
-            value: This is task-b
+            value: "This is the status of the simple task: {{tasks.simple.status}}"
         dependencies:
-        - task-a
-      - name: task-c
-        template: my-task
-        arguments:
-          parameters:
-          - name: message
-            value: "This is task-c reporting the status of task-a: {{tasks.task-b.status}}"
-        dependencies:
-        - task-b
-      - name: task-d
-        template: my-task
-        arguments:
-          parameters:
-          - name: message
-            value: "This is task-c reporting the status of task-a: {{tasks.task-b.status}}"
-        dependencies:
-        - task-b
-  - name: my-task
+        - simple
+      - name: git-clone
+        template: git-clone
+  - name: message
     inputs:
       parameters:
       - name: message
@@ -61,3 +53,16 @@ spec:
       command: [echo]
       args:
       - "{{inputs.parameters.message}}"
+  - name: git-clone
+    inputs:
+      artifacts:
+      - name: source
+        path: /src
+        git:
+          repo: https://github.com/vfarcic/argo-workflows-demo.git
+          revision: HEAD
+    container:
+      image: alpine
+      command: [ls]
+      args:
+      - /src

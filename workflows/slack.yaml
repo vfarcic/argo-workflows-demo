@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: slack-
+  labels:
+    workflows.argoproj.io/archive-strategy: "false"
+spec:
+  entrypoint: something
+  serviceAccountName: workflow
+  templates:
+  - name: something
+    dag:
+      tasks:
+      - name: something
+        template: echo
+      - name: notification
+        templateRef:
+          name: slack
+          template: notify
+        arguments:
+          parameters:
+          - name: channel
+            value: tests
+          - name: message
+            value: "This is a message sent from Argo workflow TODO: that ended with the status TODO:"
+          - name: slack-secret
+            value: slack-creds
+        dependencies:
+        - something
+  - name: echo
+    container:
+      image: alpine
+      command: [echo]
+      args:
+      - Simulating something...

@@ -1,9 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
-kind: WorkflowTemplate
+kind: ClusterWorkflowTemplate
 metadata:
   name: container-image
 spec:
-  serviceAccountName: workflow
   templates:
   - name: build-kaniko-git
     inputs:

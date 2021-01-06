@@ -22,6 +22,7 @@ spec:
         templateRef:
           name: container-image
           template: build-kaniko-git
+          clusterScope: true
         arguments:
           parameters:
           - name: app_repo

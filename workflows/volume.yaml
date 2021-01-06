@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: volume-
+spec:
+  entrypoint: main
+  serviceAccountName: workflow
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+  templates:
+    - name: main
+      dag:
+        tasks:
+        - name: git-clone
+          template: git-clone
+        - name: without-volume
+          template: without-volume
+          dependencies:
+            - git-clone
+        - name: with-volume
+          template: with-volume
+          dependencies:
+            - git-clone
+    - name: git-clone
+      inputs:
+        artifacts:
+        - name: source
+          path: /src
+          git:
+            repo: https://github.com/vfarcic/argo-workflows-demo.git
+            revision: HEAD
+      container:
+        image: alpine
+        command: [sh, -c]
+        args:
+        - cp -r /src/* /workdir/
+        volumeMounts:
+        - name: workdir
+          mountPath: /workdir
+    - name: without-volume
+      container:
+        image: alpine
+        command: [ls]
+        args:
+          - /workdir
+    - name: with-volume
+      container:
+        image: alpine
+        command: [ls]
+        args:
+          - /workdir
+        volumeMounts:
+        - name: workdir
+          mountPath: /workdir
