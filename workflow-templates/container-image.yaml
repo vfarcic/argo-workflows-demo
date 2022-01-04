@@ -12,6 +12,7 @@ spec:
       - name: container_tag
     container:
       image: gcr.io/kaniko-project/executor:debug
+      command: [/kaniko/executor]
       args:
       - --context={{inputs.parameters.app_repo}}
       - --destination={{inputs.parameters.container_image}}:{{inputs.parameters.container_tag}}
